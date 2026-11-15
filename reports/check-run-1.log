@@ -1,0 +1,126 @@
+
+[1. Запуск отдельного проекта с пустым хранилищем]
+Проект: docker-hw-check-1794775453-35134
+ Image docker-hw-check-1794775453-35134-app Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 580B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 268B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.13-slim-bookworm
+#3 DONE 2.3s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 105B done
+#4 DONE 0.0s
+
+#5 [1/5] FROM docker.io/library/python:3.13-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72
+#5 resolve docker.io/library/python:3.13-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72 done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 94B done
+#6 DONE 0.0s
+
+#7 [2/5] WORKDIR /app
+#7 CACHED
+
+#8 [3/5] COPY app/app.py app/requirements.txt ./
+#8 CACHED
+
+#9 [4/5] RUN pip install -r requirements.txt
+#9 CACHED
+
+#10 [5/5] RUN mkdir -p /data && chown 10001:10001 /data
+#10 CACHED
+
+#11 exporting to image
+#11 exporting layers done
+#11 exporting manifest sha256:78948f343505c7e8daab4c9738b7c06ea3f81c6ce9066b7d7b05d06b8e301596 done
+#11 exporting config sha256:c675309256edc220f2b2a8859b4fef3cb761b70cfddd6186cc7bc6003fd659bc done
+#11 exporting attestation manifest sha256:c131567db2343f7ff0f11be6472583a854eae20c2800df984f22a317757a8371 done
+#11 exporting manifest list sha256:cc616b6a4d65ebc7d23d86ad2b16a7d9c17c7b5d0bc44cc5edb5f46d98407550 done
+#11 naming to docker.io/library/docker-hw-check-1794775453-35134-app:latest done
+#11 unpacking to docker.io/library/docker-hw-check-1794775453-35134-app:latest done
+#11 DONE 0.0s
+
+#12 resolving provenance for metadata file
+#12 DONE 0.0s
+ Image docker-hw-check-1794775453-35134-app Built 
+ Network docker-hw-check-1794775453-35134_default Creating 
+ Volume docker-hw-check-1794775453-35134_redis-data Creating 
+ Volume docker-hw-check-1794775453-35134_redis-data Creating 
+ Network docker-hw-check-1794775453-35134_default Creating 
+ Volume docker-hw-check-1794775453-35134_redis-data Created 
+ Volume docker-hw-check-1794775453-35134_redis-data Created 
+ Network docker-hw-check-1794775453-35134_default Created 
+ Network docker-hw-check-1794775453-35134_default Created 
+ Container docker-hw-check-1794775453-35134-redis-1 Creating 
+ Container docker-hw-check-1794775453-35134-redis-1 Created 
+ Container docker-hw-check-1794775453-35134-app-1 Creating 
+ Container docker-hw-check-1794775453-35134-app-1 Created 
+ Container docker-hw-check-1794775453-35134-redis-1 Starting 
+ Container docker-hw-check-1794775453-35134-redis-1 Started 
+ Container docker-hw-check-1794775453-35134-redis-1 Waiting 
+ Container docker-hw-check-1794775453-35134-redis-1 Healthy 
+ Container docker-hw-check-1794775453-35134-app-1 Starting 
+ Container docker-hw-check-1794775453-35134-app-1 Started 
+ Container docker-hw-check-1794775453-35134-app-1 Waiting 
+ Container docker-hw-check-1794775453-35134-redis-1 Waiting 
+ Container docker-hw-check-1794775453-35134-redis-1 Healthy 
+ Container docker-hw-check-1794775453-35134-app-1 Healthy 
+
+[2. Начальный счётчик 0 и три увеличения]
+GET / → HTTP 200 {"greeting": "Docker homework check", "count": 0, "hostname": "9feb50d61219", "storage": "redis"}
+POST /increment → HTTP 200 {"greeting": "Docker homework check", "count": 1, "hostname": "9feb50d61219", "storage": "redis"}
+POST /increment → HTTP 200 {"greeting": "Docker homework check", "count": 2, "hostname": "9feb50d61219", "storage": "redis"}
+POST /increment → HTTP 200 {"greeting": "Docker homework check", "count": 3, "hostname": "9feb50d61219", "storage": "redis"}
+
+[3. Пересоздание только приложения]
+ Container docker-hw-check-1794775453-35134-app-1 Recreate 
+ Container docker-hw-check-1794775453-35134-app-1 Recreated 
+ Container docker-hw-check-1794775453-35134-app-1 Starting 
+ Container docker-hw-check-1794775453-35134-app-1 Started 
+ Container docker-hw-check-1794775453-35134-app-1 Waiting 
+ Container docker-hw-check-1794775453-35134-app-1 Healthy 
+GET / → HTTP 200 {"greeting": "Docker homework check", "count": 3, "hostname": "401745b8ab5b", "storage": "redis"}
+
+[4. Отключение и восстановление Redis]
+ Container docker-hw-check-1794775453-35134-redis-1 Stopping 
+ Container docker-hw-check-1794775453-35134-redis-1 Stopped 
+GET /healthz → HTTP 200 {"status": "alive"}
+GET /readyz → HTTP 503 {"error": "storage_unavailable"}
+POST /increment → HTTP 503 {"error": "storage_unavailable"}
+ Container docker-hw-check-1794775453-35134-redis-1 Starting 
+ Container docker-hw-check-1794775453-35134-redis-1 Started 
+ Container docker-hw-check-1794775453-35134-redis-1 Waiting 
+ Container docker-hw-check-1794775453-35134-redis-1 Healthy 
+GET / → HTTP 200 {"greeting": "Docker homework check", "count": 3, "hostname": "401745b8ab5b", "storage": "redis"}
+POST /increment → HTTP 200 {"greeting": "Docker homework check", "count": 4, "hostname": "401745b8ab5b", "storage": "redis"}
+
+[5. Согласованная резервная копия]
+ Container docker-hw-check-1794775453-35134-app-1 Stopping 
+ Container docker-hw-check-1794775453-35134-app-1 Stopped 
+ Container docker-hw-check-1794775453-35134-redis-1 Stopping 
+ Container docker-hw-check-1794775453-35134-redis-1 Stopped 
+ Container docker-hw-check-1794775453-35134-redis-run-50b60c19751e Creating 
+ Container docker-hw-check-1794775453-35134-redis-run-50b60c19751e Created 
+
+[6. Удаление тестового проекта через trap]
+ Container docker-hw-check-1794775453-35134-app-1 Stopping 
+ Container docker-hw-check-1794775453-35134-app-1 Stopped 
+ Container docker-hw-check-1794775453-35134-app-1 Removing 
+ Container docker-hw-check-1794775453-35134-app-1 Removed 
+ Container docker-hw-check-1794775453-35134-redis-1 Stopping 
+ Container docker-hw-check-1794775453-35134-redis-1 Stopped 
+ Container docker-hw-check-1794775453-35134-redis-1 Removing 
+ Container docker-hw-check-1794775453-35134-redis-1 Removed 
+ Network docker-hw-check-1794775453-35134_default Removing 
+ Volume docker-hw-check-1794775453-35134_redis-data Removing 
+ Volume docker-hw-check-1794775453-35134_redis-data Removed 
+ Network docker-hw-check-1794775453-35134_default Removed 
+PASS: все проверки пройдены, тестовый проект и volume удалены.
+Резервная копия: /Users/Konstantin/Development/Study/Docker_hm/backups/docker-hw-check-1794775453-35134.tar

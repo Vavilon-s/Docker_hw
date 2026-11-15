@@ -1,9 +1,27 @@
 ## Выполнение ДЗ
 
+запуск из папки проекта:
+```
+cp .env.example .env
+docker compose up -d --build --wait --wait-timeout 90
+```
+
+в .env можно поменять APP_PORT и GREETING. сейчас пример с портом 8000, то есть адрес http://127.0.0.1:8000/
+если поменял настройки, снова docker compose up -d --wait --wait-timeout 90
+
+ниже результаты по очереди: сначала был sqlite, потом переключил на redis.
 
 ### N1
 Команда сборки — docker build -t hm:1 .
-Команда запуска — та, где указаны порт и GREETING='Hello from Konstantin'
+Команда запуска первого контейнера:
+
+```bash
+docker run -d --name docker-hm \
+  -p 127.0.0.1:8080:8000 \
+  -e GREETING='Hello from Konstantin' \
+  hm:1
+```
+
 результат запроса:
 ```
 Konstantin@MacBook-Air-Kostin Docker_hm % curl http://127.0.0.1:8080/
@@ -51,7 +69,6 @@ Konstantin@MacBook-Air-Kostin Docker_hm %
 - сначала просто запустил контейнер, пару раз добавил 1, удалил, снова запустил и проверил текцщее значение
 
 
-
 ### N3
 
 приписал проверку работоспособности app и redis:
@@ -67,7 +84,6 @@ docker_hm-app-1     docker_hm-app      "python -u app.py"       app       18 sec
 docker_hm-redis-1   redis:7.4-alpine   "docker-entrypoint.s…"   redis     18 seconds ago   Up 15 seconds (healthy)   6379/tcp
 Konstantin@MacBook-Air-Kostin Docker_hm % 
 ```
-
 
 
 сохранение значения счетчика в redis работает исправно:
@@ -92,7 +108,13 @@ Konstantin@MacBook-Air-Kostin Docker_hm % curl http://127.0.0.1:8000/
 {"greeting": "Hello from Konstantin", "count": 2, "hostname": "943a73d1083e", "storage": "redis"}%                                                                                           
 ```
 
-хранение данных app подвязано к redis:
+хранение данных app подвязано к redis. перед проверкой останавливаем его:
+
+```bash
+docker compose stop redis
+```
+
+ответы без redis:
 ```
 Konstantin@MacBook-Air-Kostin Docker_hm % curl -i http://127.0.0.1:8000/healthz
 curl -i http://127.0.0.1:8000/readyz
@@ -132,19 +154,25 @@ curl -X POST http://127.0.0.1:8000/increment
 ```
 
 
+### N4
 
+добавил ограничения для app: не root (10001), файловая система только для чтения, память 256 MiB и cpu 1.
 
+проверка запускается из папки проекта:
+```
+./scripts/check.sh
+```
 
+нужны docker с compose и curl. питон для разбора ответов запускается внутри контейнера.
 
+скрипт создает отдельный проект с пустым volume, проверяет счетчик 0, увеличивает до 3, пересоздает только app и проверяет, что осталось 3. потом вырубает redis: healthz дает 200, readyz и increment дают 503. после запуска redis значение опять 3, следующий increment дает 4. app при этом не перезапускается.
 
+потом останавливает app и redis и сохраняет весь /data в tar, со структурой и правами. архив остается в backups, в гит эта папка не идет. в конце через trap удаляется только тестовый проект вместе с его volume. запросы ограничены 5 секундами, ожидание готовности 90. если что-то не прошло, скрипт пишет этап и выходит с ошибкой.
 
+два запуска подряд прошли, оба PASS. полный вывод тут:
 
+[первый запуск](reports/check-run-1.log)
 
-
-
-
-
-
-
+[второй запуск](reports/check-run-2.log)
 
 Условие дз доступно по [ссылке](https://github.com/Nikfilk2030/missing_semester_hse_cs/blob/main/2026/amcs/year_1/hw_3/README.md)

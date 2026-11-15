@@ -1,6 +1,9 @@
 services:
   app:
     build: .
+    read_only: true
+    mem_limit: 256m
+    cpus: 1.0
 
     ports: 
       - "127.0.0.1:${APP_PORT}:8000"
